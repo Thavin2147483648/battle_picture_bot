@@ -1,15 +1,9 @@
-from config import TELEGRAM_API_KEY
 import telebot
+from config import TELEGRAM_API_KEY, IMAGE_PATH
+from bp_creator import BPCreator
 
 bot = telebot.TeleBot(TELEGRAM_API_KEY)
-
-
-def process_text(text):
-    arr = [i.strip() for i in text.split('\n')]
-    for ind, i in enumerate(arr):
-        if len(i) > 0:
-            arr[ind] = '>' + arr[ind]
-    return arr
+bp_creator = BPCreator(IMAGE_PATH)
 
 
 @bot.message_handler(commands=['start', 'help'])
@@ -19,8 +13,10 @@ def send_welcome(message):
 
 @bot.message_handler(content_types=['text'])
 def send_bp(message):
-    text = message.text
-    bot.send_message(message.from_user.id, '\n'.join(process_text(text)))
+    text = bp_creator.process_text(message.text)
+    bot.send_message(message.from_user.id, text)
+    with open(bp_creator.create_bp(text), 'rb') as img:
+        bot.send_photo(message.from_user.id, img)
 
 
 if __name__ == '__main__':
